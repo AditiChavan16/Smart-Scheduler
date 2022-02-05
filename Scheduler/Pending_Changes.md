@@ -9,3 +9,5 @@
 4.More duration to crowded areas (non toxic area priority side effect)
 
 5.Implement a: m :w:n ratio 
+
+6.Cycle Week Capsules
