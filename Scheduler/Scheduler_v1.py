@@ -1,10 +1,9 @@
-
 from dateutil.relativedelta import relativedelta
 import random 
 import datetime
 import csv
 import pandas as pd 
-
+global_done_list = []
 def check_week_capsule_health(week_capsule:list)->str:
     none_day_count = 0 
     for day in week_capsule:
@@ -16,7 +15,6 @@ def check_week_capsule_health(week_capsule:list)->str:
         return "medium"
     else:
         return "good"
-
 
 def group_into_area(scrambled_soc_lists:tuple)->dict[str:list]:
     area_dict  =  { }
@@ -49,7 +47,7 @@ def classifier(zone_list:list)->tuple[tuple,tuple,tuple]:
     angel_soc = []
     worst_soc = []
     medium_soc = []
-    classifier_dict = {'East':800,'West':1000,'North':1000,'South':800,'Central':1000}
+    classifier_dict = {'East':800,'West':800,'North':1000,'South':800,'Central':800}
     for society in zone_list:
         
         if int(society[2])>=classifier_dict[society[3]]:
@@ -94,7 +92,7 @@ def week_full(week:list):
         if len(week[i])<=2:
             return False
     return True
-
+# not in use right now 
 def get_day_societies(day_int:int , done_list:list,items_list,week):
     random.shuffle(items_list)
     area_reference = False
@@ -117,6 +115,32 @@ def get_day_societies(day_int:int , done_list:list,items_list,week):
 def get_angel_day_soieties():
     pass 
 
+def get_direct_soc(done_list:list,area:str,angel:bool)->str:
+    print(done_list)
+    with open('data3.csv', 'r') as f:
+        data = csv.reader(f)
+        if angel:
+            for row in data:
+                if row[1] not in done_list and row[4].lower().strip() == area.lower().strip() and int(row[2])>=1000:
+                    done_list.append(row[1])
+                    return row[1]
+        #return a society anyway
+        for row in data:
+            if row[1] not in done_list and row[4].lower().strip() == area.lower().strip():
+                done_list.append(row[1])
+                return row[1]
+    return None
+
+#discouraged to use this function because it bypasses many checks
+def unrestricted_zone_filling(done_list,zone):
+    with open('data3.csv', 'r') as f:
+        data = csv.reader(f)
+        for row in data:
+            if row[1] not in done_list and row[3].lower().strip() == zone.lower().strip():
+                done_list.append(row[1])
+                return row[1]
+    return None
+    
 def generate_week_capsules(zone:str):
     _zone = get_zone(zone)
    
@@ -131,7 +155,7 @@ def generate_week_capsules(zone:str):
     #new_items = list(new_dict.items())
     worst_items = list(worst_dict.items())
     angel_items = list(angel_dict.items())
-    for i in range(5):
+    for i in range(3):
         area_reference = [False,False,False,False,False,False,False]
         week = [[],[],[],[],[],[]]
         for area, soc_list in med_items:
@@ -209,6 +233,7 @@ def generate_week_capsules(zone:str):
                         
                         if  area_reference[4] == area: 
                                 week[4].append(soc[1])
+                                done.append(soc[1])
                            
                         if len(week[4])>=2:
                                 break 
@@ -225,7 +250,7 @@ def generate_week_capsules(zone:str):
                         
                         if  area_reference[5] == area and soc[1] not in week[4]: 
                                 week[5].append(soc[1])
-                            
+                                done.append(soc[1])
                         if len(week[5])>=2:
                                 break 
                     if len(week[5])>=2:
@@ -251,39 +276,31 @@ def generate_week_capsules(zone:str):
                     if len(day)>=2:
                         day.append(area_reference[2])
                         break
-                    
-
-        #extra filler 
-        for day in week:
-            if len(day) == 0 :
-                area_reference = [False,False,False,False,False,False,False]
-                for area, soc_list in med_items :
-                    if not area_reference[2] :
-                            area_reference[2] = area
-                    for soc in soc_list :
-                        
-                        if soc[1] not in done and area_reference[2] == area: 
-                                day.append(soc[1])
-                            
-                                done.append(soc[1])
-                        if len(day)>=2:
-                                break 
-                    if len(day)>=2:
-                        day.append(area_reference[2])
-                        break
-                    
+                
         
         
         #checking failures 
-        for day in week:
-            if len(day) == 0 :
-                day.append(None)
-                day.append(None)
-                day.append(None)
+        for day_num in range(len(week)):
+            if len(week[day_num]) == 0 :
+                week[day_num].append(None)
+                week[day_num].append(None)
+                week[day_num].append(None)
 
-            if len(day) == 1 :
-                day.append(None)
-                day.append(get_area_from_name(day[0]))
+            if len(week[day_num]) == 1 :
+                week[day_num].append(get_direct_soc(done,get_area_from_name(week[day_num][0]),day_num==4 or day_num==5))
+                week[day_num].append(get_area_from_name(week[day_num][0]))
+        #smart filler 
+        for day in week:
+            if day.count(None) == 3:
+                day[0] = unrestricted_zone_filling(done,zone)
+                day[1] = unrestricted_zone_filling(done,zone)
+                try:
+                    day[2] = get_area_from_name(day[0])
+                except:
+                    day[2] = None 
+
+            
+
         
         
         print(week)
@@ -327,9 +344,7 @@ def lay_schedule_per_zone(start_date,zone_week_numbers,week_capsules,schedule_di
             z = 0
         repeat_cycler.append(z)
         z+=1
-    repeat_cycler = [0,1,2,0,1,2,0,1,2]
     r_c = 0 
-    #[1,6,11,....]
     for i in range(len(zone_week_numbers)):
         current_date = start_date + relativedelta(weeks=zone_week_numbers[i])
         
@@ -337,8 +352,9 @@ def lay_schedule_per_zone(start_date,zone_week_numbers,week_capsules,schedule_di
             current_date += relativedelta(days=1)
 
         if check_week_capsule_health(week_capsules[repeat_cycler[r_c]]) == "low":
-             #shifting to another zone and waving goodbye to this one 
-             lay_schedule_per_zone(start_date,week_number_generator(zone_week_numbers[i],total_weeks),generate_week_capsules('West'),schedule_dict,total_weeks)
+             #shifting to another zone and waving goodbye to this one
+             strong_zones = ['West','North']
+             lay_schedule_per_zone(start_date,week_number_generator(zone_week_numbers[i],total_weeks),generate_week_capsules(random.choice(strong_zones)),schedule_dict,total_weeks)
              return 
         else:
             for j in range(len(week_capsules[repeat_cycler[r_c]])):
@@ -391,8 +407,33 @@ schedule_dict = schedule_generator(datetime.date(2022,2,22),4)
 print_schedule_dict(schedule_dict)
 for date , soc_list in schedule_dict.items():
     dict_data.append({'Date':date.split()[0],'Society names':(soc_list[0],soc_list[1]),'Area':soc_list[-1],'Zone':get_zone_from_area_name(soc_list[-1]),'Week Number':date.split()[1]})
+    for i in range(2):
+        if soc_list[i] not in global_done_list:
+            global_done_list.append(soc_list[i])
 
-csv_file = "Schedule.csv"
+#make a new galaxy for socieites when calling recursively hmmge 
+
+
+#did not get chance list 
+nope = []
+with open('data3.csv','r') as f:
+        data = list(csv.reader(f))
+        for i in data:
+            soc_name = i[1]
+            
+            if soc_name not in global_done_list :
+                print(soc_name)
+                nope.append({'Date':'To be decided','Society name':soc_name,'Area':i[4],'Zone':i[3],'Week Number':'To be decided'})
+print("\n\n\n\n\n\n")
+
+print(nope)
+
+
+
+
+
+
+csv_file = "Schedule3.csv"
 csv_columns = ['Date','Society names','Area','Zone',"Week Number"]
 try:
     with open(csv_file, 'w') as csvfile:
@@ -403,10 +444,11 @@ try:
 except IOError:
     print("I/O error")
 
-df_new = pd.read_csv('Schedule.csv')
+df_new = pd.read_csv('Schedule3.csv')
   
 # saving xlsx file
-schedule_xlsx = pd.ExcelWriter('Schedule.xlsx')
+schedule_xlsx = pd.ExcelWriter('Schedule3.xlsx')
 df_new.to_excel(schedule_xlsx, index = False)
   
 schedule_xlsx.save()
+
