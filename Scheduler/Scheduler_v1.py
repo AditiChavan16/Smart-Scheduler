@@ -5,6 +5,19 @@ import datetime
 import csv
 import pandas as pd 
 
+def check_week_capsule_health(week_capsule:list)->str:
+    none_day_count = 0 
+    for day in week_capsule:
+        if day.count(None)==3:
+            none_day_count += 1
+    if none_day_count >= 2:
+        return f"low"
+    elif none_day_count == 1:
+        return "medium"
+    else:
+        return "good"
+
+
 def group_into_area(scrambled_soc_lists:tuple)->dict[str:list]:
     area_dict  =  { }
     for society in scrambled_soc_lists:
@@ -56,6 +69,16 @@ def get_area_from_name(name:str):
                 return row[4].lower().strip()
     return "No Area"
 
+def get_zone_from_area_name(area_name:str)->str:
+    if area_name == None:
+        return None 
+    with open('data3.csv', 'r') as f:
+        data = csv.reader(f)
+        for row in data:
+            if row[4].lower().strip() == area_name.lower().strip():
+                return row[3].lower().strip()
+    return "No Zone"
+
 def print_schedule_dict(sc_dict:dict)->None:
     for date,soc_list in sorted(sc_dict.items()):
         print(f' {date} : {soc_list}')
@@ -96,7 +119,7 @@ def get_angel_day_soieties():
 
 def generate_week_capsules(zone:str):
     _zone = get_zone(zone)
-    print(f'{zone} has {len(_zone)} societies')
+   
     _classified = classifier(_zone)
     capsule_holder = []
     done = []
@@ -111,13 +134,6 @@ def generate_week_capsules(zone:str):
     for i in range(5):
         area_reference = [False,False,False,False,False,False,False]
         week = [[],[],[],[],[],[]]
-        # get_day_societies(0,done,new_items,week)
-        # get_day_societies(1,done,new_items,week)
-        # get_day_societies(2,done,med_items,week)
-        # get_day_societies(3,done,med_items,week)
-        # get_day_societies(4,done,angel_items,week)
-        # get_day_societies(5,done,angel_items,week)
-        
         for area, soc_list in med_items:
             if len(soc_list)>=2:
                     if not area_reference[0]:
@@ -132,7 +148,7 @@ def generate_week_capsules(zone:str):
                     if len(week[0])>=2:
                         week[0].append(area_reference[0])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
+                    
                 
 
 
@@ -151,7 +167,7 @@ def generate_week_capsules(zone:str):
                     if len(week[1])>=2:
                         week[1].append(area_reference[1])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
+                    
 
         random.shuffle(med_items)
         for area, soc_list in med_items:
@@ -168,7 +184,7 @@ def generate_week_capsules(zone:str):
                     if len(week[2])>=2:
                         week[2].append(area_reference[2])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
+                    
 
         random.shuffle(med_items)
         for area, soc_list in med_items:
@@ -185,8 +201,7 @@ def generate_week_capsules(zone:str):
                     if len(week[3])>=2:
                         week[3].append(area_reference[3])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
-
+                    
         for area, soc_list in angel_items:
                     if not area_reference[4]:
                             area_reference[4] = area
@@ -200,7 +215,7 @@ def generate_week_capsules(zone:str):
                     if len(week[4])>=2:
                         week[4].append(area_reference[4])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
+                    
 
         random.shuffle(angel_items)
         for area, soc_list in angel_items:
@@ -216,14 +231,14 @@ def generate_week_capsules(zone:str):
                     if len(week[5])>=2:
                         week[5].append(area_reference[5])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
+                    
 
         #filler
         for day in week:
             if len(day) == 0 :
                 area_reference = [False,False,False,False,False,False,False]
                 for area, soc_list in med_items:
-                    if not area_reference[2] or len(day) == 0:
+                    if not area_reference[2] :
                             area_reference[2] = area
                     for soc in soc_list :
                         
@@ -236,14 +251,14 @@ def generate_week_capsules(zone:str):
                     if len(day)>=2:
                         day.append(area_reference[2])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
+                    
 
         #extra filler 
         for day in week:
             if len(day) == 0 :
                 area_reference = [False,False,False,False,False,False,False]
                 for area, soc_list in med_items :
-                    if not area_reference[2] or len(day) == 0:
+                    if not area_reference[2] :
                             area_reference[2] = area
                     for soc in soc_list :
                         
@@ -256,7 +271,8 @@ def generate_week_capsules(zone:str):
                     if len(day)>=2:
                         day.append(area_reference[2])
                         break
-                    area_reference = [False,False,False,False,False,False,False]
+                    
+        
         
         #checking failures 
         for day in week:
@@ -269,8 +285,8 @@ def generate_week_capsules(zone:str):
                 day.append(None)
                 day.append(get_area_from_name(day[0]))
         
-        print(week)
         
+        print(week)
         #utility for clubbing similar areas
         temp_week = week 
         temp_sche_list = [ ]
@@ -303,7 +319,7 @@ def week_number_generator(seed:int,total_weeks:int)->list:
     number_list.sort()
     return number_list
 
-def lay_schedule_per_zone(start_date,zone_week_numbers,week_capsule,schedule_dict):
+def lay_schedule_per_zone(start_date,zone_week_numbers,week_capsules,schedule_dict,total_weeks):
     repeat_cycler = []
     z = 0
     for i in range(len(zone_week_numbers)):
@@ -311,16 +327,23 @@ def lay_schedule_per_zone(start_date,zone_week_numbers,week_capsule,schedule_dic
             z = 0
         repeat_cycler.append(z)
         z+=1
-    
+    repeat_cycler = [0,1,2,0,1,2,0,1,2]
     r_c = 0 
+    #[1,6,11,....]
     for i in range(len(zone_week_numbers)):
         current_date = start_date + relativedelta(weeks=zone_week_numbers[i])
         
         while not is_tuesday(current_date):
             current_date += relativedelta(days=1)
-        for j in range(len(week_capsule[repeat_cycler[r_c]])):
-            schedule_dict[f'{current_date:%m-%d-%Y}'] = week_capsule[repeat_cycler[r_c]][j]
-            current_date += relativedelta(days=1)
+
+        if check_week_capsule_health(week_capsules[repeat_cycler[r_c]]) == "low":
+             #shifting to another zone and waving goodbye to this one 
+             lay_schedule_per_zone(start_date,week_number_generator(zone_week_numbers[i],total_weeks),generate_week_capsules('West'),schedule_dict,total_weeks)
+             return 
+        else:
+            for j in range(len(week_capsules[repeat_cycler[r_c]])):
+                    schedule_dict[f'{current_date:%m-%d-%Y} {zone_week_numbers[i]}'] = week_capsules[repeat_cycler[r_c]][j]
+                    current_date += relativedelta(days=1)
         r_c += 1
 
 
@@ -331,15 +354,6 @@ def schedule_generator(start_date: datetime.date, duration_months:int):
     south_capsules = generate_week_capsules('South')
     north_capsules = generate_week_capsules('North')
     central_capsules = generate_week_capsules('Central')
-    # print(east_capsules)
-    # print("\n\n")
-    # print(west_capsules)
-    # print("\n\n")
-    # print(south_capsules)
-    # print("\n\n")
-    # print(north_capsules)
-    # print("\n\n")
-    # print(central_capsules)
   
     while not is_tuesday(start_date):
         start_date += datetime.timedelta(days=1)
@@ -363,85 +377,36 @@ def schedule_generator(start_date: datetime.date, duration_months:int):
     central_numbers = week_number_generator(seed+4,total_weeks)
 
 
-    lay_schedule_per_zone(start_date,east_numbers,east_capsules,schedule_dict)
-    lay_schedule_per_zone(start_date,west_numbers,west_capsules,schedule_dict)
-    lay_schedule_per_zone(start_date,south_numbers,south_capsules,schedule_dict)
-    lay_schedule_per_zone(start_date,north_numbers,north_capsules,schedule_dict)
-    lay_schedule_per_zone(start_date,central_numbers,central_capsules,schedule_dict)
+    lay_schedule_per_zone(start_date,east_numbers,east_capsules,schedule_dict,total_weeks)
+    lay_schedule_per_zone(start_date,west_numbers,west_capsules,schedule_dict,total_weeks)
+    lay_schedule_per_zone(start_date,south_numbers,south_capsules,schedule_dict,total_weeks)
+    lay_schedule_per_zone(start_date,north_numbers,north_capsules,schedule_dict,total_weeks)
+    lay_schedule_per_zone(start_date,central_numbers,central_capsules,schedule_dict,total_weeks)
 
-
-    # for i in range(len(east_numbers)):
-    #     current_date = start_date + relativedelta(weeks=east_numbers[i])
-        
-    #     while not is_tuesday(current_date):
-    #         current_date += relativedelta(days=1)
-    #     for j in range(len(east_capsules[1])):
-    #         schedule_dict[f'{current_date:%m-%d-%Y}'] = east_capsules[1][j]
-    #         current_date += relativedelta(days=1)
-
-
-    # for i in range(len(west_numbers)):
-    #     current_date = start_date + relativedelta(weeks=west_numbers[i])
-        
-    #     while not is_tuesday(current_date):
-    #         current_date += relativedelta(days=1)
-    #     for j in range(len(west_capsules[1])):
-    #         schedule_dict[f'{current_date:%m-%d-%Y}'] = west_capsules[1][j]
-    #         current_date += relativedelta(days=1)
-
-
-    # for i in range(len(north_numbers)):
-    #     current_date = start_date + relativedelta(weeks=north_numbers[i])
-        
-    #     while not is_tuesday(current_date):
-    #         current_date += relativedelta(days=1)
-    #     for j in range(len(north_capsules[1])):
-    #         schedule_dict[f'{current_date:%m-%d-%Y}'] = north_capsules[1][j]
-    #         current_date += relativedelta(days=1)
-
-
-    # for i in range(len(south_numbers)):
-    #     current_date = start_date + relativedelta(weeks=south_numbers[i])
-        
-    #     while not is_tuesday(current_date):
-    #         current_date += relativedelta(days=1)
-    #     for j in range(len(south_capsules[1])):
-    #         schedule_dict[f'{current_date:%m-%d-%Y}'] = south_capsules[1][j]
-    #         current_date += relativedelta(days=1)
-
-    # for i in range(len(central_numbers)):
-    #     current_date = start_date + relativedelta(weeks=central_numbers[i])
-        
-    #     while not is_tuesday(current_date):
-    #         current_date += relativedelta(days=1)
-    #     for j in range(len(central_capsules[1])):
-    #         schedule_dict[f'{current_date:%m-%d-%Y}'] = central_capsules[1][j]
-    #         current_date += relativedelta(days=1)
     
     return schedule_dict
 
 dict_data = []
 schedule_dict = schedule_generator(datetime.date(2022,2,22),4)
 print_schedule_dict(schedule_dict)
-# for date , soc_list in schedule_dict.items():
-#     dict_data.append({'Date':date,'Society names':(soc_list[0],soc_list[1]),'Area':soc_list[-1]})
+for date , soc_list in schedule_dict.items():
+    dict_data.append({'Date':date.split()[0],'Society names':(soc_list[0],soc_list[1]),'Area':soc_list[-1],'Zone':get_zone_from_area_name(soc_list[-1]),'Week Number':date.split()[1]})
 
-# csv_file = "Schedule.csv"
-# csv_columns = ['Date','Society names','Area']
-# try:
-#     with open(csv_file, 'w') as csvfile:
-#         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-#         writer.writeheader()
-#         for data in dict_data:
-#             writer.writerow(data)
-# except IOError:
-#     print("I/O error")
+csv_file = "Schedule.csv"
+csv_columns = ['Date','Society names','Area','Zone',"Week Number"]
+try:
+    with open(csv_file, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        writer.writeheader()
+        for data in dict_data:
+            writer.writerow(data)
+except IOError:
+    print("I/O error")
 
-# df_new = pd.read_csv('Schedule.csv')
+df_new = pd.read_csv('Schedule.csv')
   
-# # saving xlsx file
-# schedule_xlsx = pd.ExcelWriter('Schedule.xlsx')
-# df_new.to_excel(schedule_xlsx, index = False)
+# saving xlsx file
+schedule_xlsx = pd.ExcelWriter('Schedule.xlsx')
+df_new.to_excel(schedule_xlsx, index = False)
   
-# schedule_xlsx.save()
-
+schedule_xlsx.save()
