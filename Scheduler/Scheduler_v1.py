@@ -4,6 +4,223 @@ import datetime
 import csv
 import pandas as pd 
 global_done_list = []
+global_actual_done_list = []
+
+
+
+def get_my_unlucky_pair(unlucky_list,area:str):
+    if area:
+        for soc in unlucky_list:
+            soc_area = get_area_from_name(soc)
+            if soc_area == area.lower().strip():
+                return soc
+    return None
+
+
+
+def get_standard_from_name(name:str):
+    if name:
+        classifier_dict = {'East':800,'West':800,'North':1000,'South':800,'Central':800}
+        with open('data3.csv', 'r') as f:
+            data = csv.reader(f)
+            for row in data:
+                if row[1].lower().strip() == name.lower().strip():
+                    try:
+                        if int(row[2])>=classifier_dict[row[3]]:
+                            return "Angel"
+                        elif float(row[-1])<=2500:
+                            return "Worst"
+                        else:
+                            return "Medium"
+                    except:
+                        pass
+    return None
+
+
+def generate_week_capsules_alternate(zone):
+    global global_done_list 
+    _zone = get_zone(zone)
+    _classified = classifier(_zone)
+    capsule_holder = []
+    done = global_done_list
+    angel_dict = group_into_area(_classified[1])
+    medium_dict = group_into_area(_classified[3])
+    worst_dict = group_into_area(_classified[2])
+    #new_dict = group_into_area(_classified[0])
+    med_items = list(medium_dict.items())
+    #new_items = list(new_dict.items())
+    worst_items = list(worst_dict.items())
+    angel_items = list(angel_dict.items())
+    for i in range(3):
+        area_reference = [False,False,False,False,False,False,False]
+        week = [[],[],[],[],[],[]]
+        for area, soc_list in med_items:
+            if len(soc_list)>=2:
+                    if not area_reference[0]:
+                            area_reference[0] = area
+                    for soc in soc_list :
+                        if soc[1] not in done and area_reference[0] == area: 
+                                week[0].append(soc[1])
+                                global_done_list.append(soc[1])
+                                done.append(soc[1])
+                        if len(week[0])>=2:
+                                break 
+                    if len(week[0])>=2:
+                        week[0].append(area_reference[0])
+                        break
+                    
+                
+
+
+        random.shuffle(med_items)
+        for area, soc_list in med_items:
+                    if not area_reference[1]:
+                            area_reference[1] = area
+                    for soc in soc_list :
+                        
+                        if soc[1] not in done and area_reference[1] == area: 
+                                week[1].append(soc[1])
+                                global_done_list.append(soc[1])
+                                done.append(soc[1])
+                        if len(week[1])>=2:
+                                break 
+                    if len(week[1])>=2:
+                        week[1].append(area_reference[1])
+                        break
+                    
+
+        random.shuffle(med_items)
+        for area, soc_list in med_items:
+                    if not area_reference[2]:
+                            area_reference[2] = area
+                    for soc in soc_list :
+                        
+                        if soc[1] not in done and area_reference[2] == area: 
+                                week[2].append(soc[1])
+                                global_done_list.append(soc[1])
+                                done.append(soc[1])
+                        if len(week[2])>=2:
+                                break 
+                    if len(week[2])>=2:
+                        week[2].append(area_reference[2])
+                        break
+                    
+
+        random.shuffle(med_items)
+        for area, soc_list in med_items:
+                    if not area_reference[3]:
+                            area_reference[3] = area
+                    for soc in soc_list :
+                        
+                        if soc[1] not in done and area_reference[3] == area: 
+                                week[3].append(soc[1])
+                                global_done_list.append(soc[1])
+                                done.append(soc[1])
+                        if len(week[3])>=2:
+                                break 
+                    if len(week[3])>=2:
+                        week[3].append(area_reference[3])
+                        break
+                    
+        for area, soc_list in angel_items:
+                    if not area_reference[4]:
+                            area_reference[4] = area
+                    for soc in soc_list :
+                        
+                        if  area_reference[4] == area: 
+                                week[4].append(soc[1])
+                                done.append(soc[1])
+                                global_done_list.append(soc[1])
+                        if len(week[4])>=2:
+                                break 
+                    if len(week[4])>=2:
+                        week[4].append(area_reference[4])
+                        break
+                    
+
+        random.shuffle(angel_items)
+        for area, soc_list in angel_items:
+                    if not area_reference[5]:
+                            area_reference[5] = area
+                    for soc in soc_list :
+                        
+                        if  area_reference[5] == area and soc[1] not in week[4]: 
+                                week[5].append(soc[1])
+                                done.append(soc[1])
+                                global_done_list.append(soc[1])
+                        if len(week[5])>=2:
+                                break 
+                    if len(week[5])>=2:
+                        week[5].append(area_reference[5])
+                        break
+                    
+
+        #filler
+        for day in week:
+            if len(day) == 0 :
+                area_reference = [False,False,False,False,False,False,False]
+                for area, soc_list in med_items:
+                    if not area_reference[2] :
+                            area_reference[2] = area
+                    for soc in soc_list :
+                        
+                        if soc[1] not in done and area_reference[2] == area: 
+                                day.append(soc[1])
+                                global_done_list.append(soc[1])
+                                done.append(soc[1])
+                        if len(day)>=2:
+                                break 
+                    if len(day)>=2:
+                        day.append(area_reference[2])
+                        break
+                
+        
+        
+        #checking failures 
+        for day_num in range(len(week)):
+            if len(week[day_num]) == 0 :
+                week[day_num].append(None)
+                week[day_num].append(None)
+                week[day_num].append(None)
+
+            if len(week[day_num]) == 1 :
+                direct_soc = get_direct_soc(done,get_area_from_name(week[day_num][0]),day_num==4 or day_num==5)
+                week[day_num].append(direct_soc)
+                global_done_list.append(direct_soc)
+                week[day_num].append(get_area_from_name(week[day_num][0]))
+        #smart filler 
+        for day in week:
+            if day.count(None) == 3:
+                day[0] = unrestricted_zone_filling(done,zone)
+                day[1] = unrestricted_zone_filling(done,zone)
+                global_done_list.append(day[0])
+                global_done_list.append(day[1])
+                try:
+                    day[2] = get_area_from_name(day[0])
+
+                except:
+                    day[2] = None 
+
+            
+
+        
+        
+        print(week)
+        #utility for clubbing similar areas
+        temp_week = week 
+        temp_sche_list = [ ]
+        for day in temp_week:
+            temp_sche_list.append(day)
+            for i in temp_week :
+                if day[2] == i[2] and i not in temp_sche_list:
+                    temp_sche_list.append(i)
+                    temp_week.remove(i)
+        week = temp_sche_list
+  
+        capsule_holder.append(week)
+    
+    return capsule_holder
+
 def check_week_capsule_health(week_capsule:list)->str:
     none_day_count = 0 
     for day in week_capsule:
@@ -142,6 +359,7 @@ def unrestricted_zone_filling(done_list,zone):
     return None
     
 def generate_week_capsules(zone:str):
+    global global_done_list
     _zone = get_zone(zone)
    
     _classified = classifier(_zone)
@@ -165,7 +383,7 @@ def generate_week_capsules(zone:str):
                     for soc in soc_list :
                         if soc[1] not in done and area_reference[0] == area: 
                                 week[0].append(soc[1])
-                           
+                                global_done_list.append(soc[1])
                                 done.append(soc[1])
                         if len(week[0])>=2:
                                 break 
@@ -184,7 +402,7 @@ def generate_week_capsules(zone:str):
                         
                         if soc[1] not in done and area_reference[1] == area: 
                                 week[1].append(soc[1])
-                            
+                                global_done_list.append(soc[1])
                                 done.append(soc[1])
                         if len(week[1])>=2:
                                 break 
@@ -201,7 +419,7 @@ def generate_week_capsules(zone:str):
                         
                         if soc[1] not in done and area_reference[2] == area: 
                                 week[2].append(soc[1])
-                            
+                                global_done_list.append(soc[1])
                                 done.append(soc[1])
                         if len(week[2])>=2:
                                 break 
@@ -218,7 +436,7 @@ def generate_week_capsules(zone:str):
                         
                         if soc[1] not in done and area_reference[3] == area: 
                                 week[3].append(soc[1])
-                            
+                                global_done_list.append(soc[1])
                                 done.append(soc[1])
                         if len(week[3])>=2:
                                 break 
@@ -234,7 +452,7 @@ def generate_week_capsules(zone:str):
                         if  area_reference[4] == area: 
                                 week[4].append(soc[1])
                                 done.append(soc[1])
-                           
+                                global_done_list.append(soc[1])
                         if len(week[4])>=2:
                                 break 
                     if len(week[4])>=2:
@@ -251,6 +469,7 @@ def generate_week_capsules(zone:str):
                         if  area_reference[5] == area and soc[1] not in week[4]: 
                                 week[5].append(soc[1])
                                 done.append(soc[1])
+                                global_done_list.append(soc[1])
                         if len(week[5])>=2:
                                 break 
                     if len(week[5])>=2:
@@ -269,7 +488,7 @@ def generate_week_capsules(zone:str):
                         
                         if soc[1] not in done and area_reference[2] == area: 
                                 day.append(soc[1])
-                            
+                                global_done_list.append(soc[1])
                                 done.append(soc[1])
                         if len(day)>=2:
                                 break 
@@ -287,15 +506,20 @@ def generate_week_capsules(zone:str):
                 week[day_num].append(None)
 
             if len(week[day_num]) == 1 :
-                week[day_num].append(get_direct_soc(done,get_area_from_name(week[day_num][0]),day_num==4 or day_num==5))
+                direct_soc = get_direct_soc(done,get_area_from_name(week[day_num][0]),day_num==4 or day_num==5)
+                week[day_num].append(direct_soc)
+                global_done_list.append(direct_soc)
                 week[day_num].append(get_area_from_name(week[day_num][0]))
         #smart filler 
         for day in week:
             if day.count(None) == 3:
                 day[0] = unrestricted_zone_filling(done,zone)
                 day[1] = unrestricted_zone_filling(done,zone)
+                global_done_list.append(day[0])
+                global_done_list.append(day[1])
                 try:
                     day[2] = get_area_from_name(day[0])
+
                 except:
                     day[2] = None 
 
@@ -354,7 +578,7 @@ def lay_schedule_per_zone(start_date,zone_week_numbers,week_capsules,schedule_di
         if check_week_capsule_health(week_capsules[repeat_cycler[r_c]]) == "low":
              #shifting to another zone and waving goodbye to this one
              strong_zones = ['West','North']
-             lay_schedule_per_zone(start_date,week_number_generator(zone_week_numbers[i],total_weeks),generate_week_capsules(random.choice(strong_zones)),schedule_dict,total_weeks)
+             lay_schedule_per_zone(start_date,week_number_generator(zone_week_numbers[i],total_weeks),generate_week_capsules_alternate(random.choice(strong_zones)),schedule_dict,total_weeks)
              return 
         else:
             for j in range(len(week_capsules[repeat_cycler[r_c]])):
@@ -364,7 +588,7 @@ def lay_schedule_per_zone(start_date,zone_week_numbers,week_capsules,schedule_di
 
 
 def schedule_generator(start_date: datetime.date, duration_months:int):
-    #capsules contain the week capsules - 5 
+    #capsules contain the week capsules - 3
     east_capsules = generate_week_capsules('East')
     west_capsules = generate_week_capsules('West')
     south_capsules = generate_week_capsules('South')
@@ -402,39 +626,42 @@ def schedule_generator(start_date: datetime.date, duration_months:int):
     
     return schedule_dict
 
+
+#final values overriding to prevent Nones 
 dict_data = []
 schedule_dict = schedule_generator(datetime.date(2022,2,22),4)
 print_schedule_dict(schedule_dict)
 for date , soc_list in schedule_dict.items():
-    dict_data.append({'Date':date.split()[0],'Society names':(soc_list[0],soc_list[1]),'Area':soc_list[-1],'Zone':get_zone_from_area_name(soc_list[-1]),'Week Number':date.split()[1]})
     for i in range(2):
-        if soc_list[i] not in global_done_list:
-            global_done_list.append(soc_list[i])
+        if soc_list[i] not in global_actual_done_list:
+            global_actual_done_list.append(soc_list[i])
 
-#make a new galaxy for socieites when calling recursively hmmge 
+unlucky_soc = []
+for i in global_done_list:
+    if i not in global_actual_done_list:
+        unlucky_soc.append(i)
+for date , soc_list in schedule_dict.items():
+    if soc_list[1] == None:
+        soc_list[1] = get_my_unlucky_pair(unlucky_soc,soc_list[0])
+
+for date , soc_list in schedule_dict.items():
+    dict_data.append({'Date':date.split()[0],'Society 1':soc_list[0],'Society 2':soc_list[1],'Area':soc_list[-1],'Zone':get_zone_from_area_name(soc_list[-1]),'Week Number':date.split()[1],'Standard':(get_standard_from_name(soc_list[0]),get_standard_from_name(soc_list[1]))})
 
 
 #did not get chance list 
 nope = []
+nope_helper = [ ]
 with open('data3.csv','r') as f:
         data = list(csv.reader(f))
         for i in data:
             soc_name = i[1]
-            
-            if soc_name not in global_done_list :
-                print(soc_name)
-                nope.append({'Date':'To be decided','Society name':soc_name,'Area':i[4],'Zone':i[3],'Week Number':'To be decided'})
-print("\n\n\n\n\n\n")
-
-print(nope)
-
-
-
-
-
-
-csv_file = "Schedule3.csv"
-csv_columns = ['Date','Society names','Area','Zone',"Week Number"]
+            if soc_name not in global_actual_done_list and soc_name not in nope_helper :
+                nope.append({'Date':'To be decided','Society 1':soc_name,'Society 2':soc_name,'Area':i[4],'Zone':i[3],'Week Number':'To be decided','Standard':get_standard_from_name(soc_name)})
+                nope_helper.append(soc_name)
+dict_data+=nope
+csv_file_name = "Schedule7.csv"
+csv_file = csv_file_name
+csv_columns = ['Date','Society 1','Society 2','Area','Zone',"Week Number",'Standard']
 try:
     with open(csv_file, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
@@ -444,11 +671,11 @@ try:
 except IOError:
     print("I/O error")
 
-df_new = pd.read_csv('Schedule3.csv')
+df_new = pd.read_csv(csv_file_name)
   
-# saving xlsx file
-schedule_xlsx = pd.ExcelWriter('Schedule3.xlsx')
+schedule_xlsx = pd.ExcelWriter('Schedule7.xlsx')
 df_new.to_excel(schedule_xlsx, index = False)
-  
+
+
 schedule_xlsx.save()
 
