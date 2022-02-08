@@ -19,7 +19,7 @@ def are_in_same_area(soc1:str,soc2:str):
     if soc1 and soc2:
         return get_area_from_name(soc1) == get_area_from_name(soc2)
     else:
-        return "One of them is none lol"
+        return "One of them is none"
 
 def get_my_unlucky_pair(unlucky_list,area:str):
     if area:
@@ -688,7 +688,7 @@ schedule_xlsx = pd.ExcelWriter('ScheduleOmega.xlsx')
 df_new.to_excel(schedule_xlsx, index = False)
 
 print(schedule_quality.count(True))
-print(schedule_quality.count("One of them is none lol"))
+print(schedule_quality.count("One of them is none"))
 print(schedule_quality.count(False))
 schedule_xlsx.save()
 
