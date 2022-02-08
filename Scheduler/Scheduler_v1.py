@@ -6,6 +6,15 @@ import pandas as pd
 global_done_list = []
 global_actual_done_list = []
 
+def get_flat_count_from_name(name:str):
+    if name:
+        with open('data3.csv', 'r') as f:
+            data = csv.reader(f)
+            for row in data:
+                if row[1].lower().strip() == name.lower().strip():
+                    return row[2]
+    return None
+
 def are_in_same_area(soc1:str,soc2:str):
     if soc1 and soc2:
         return get_area_from_name(soc1) == get_area_from_name(soc2)
@@ -19,8 +28,6 @@ def get_my_unlucky_pair(unlucky_list,area:str):
             if soc_area == area.lower().strip():
                 return soc
     return None
-
-
 
 def get_standard_from_name(name:str):
     if name:
@@ -39,7 +46,6 @@ def get_standard_from_name(name:str):
                     except:
                         pass
     return None
-
 
 def generate_week_capsules_alternate(zone):
     global global_done_list 
@@ -221,7 +227,7 @@ def generate_week_capsules_alternate(zone):
         week = temp_sche_list
   
         capsule_holder.append(week)
-    
+    print(capsule_holder)
     return capsule_holder
 
 def check_week_capsule_health(week_capsule:list)->str:
@@ -529,10 +535,6 @@ def generate_week_capsules(zone:str):
                 except:
                     day[2] = None 
         
-
-  
-        capsule_holder.append(week)
-
         
         
         #utility for clubbing similar areas
@@ -545,9 +547,9 @@ def generate_week_capsules(zone:str):
                     temp_sche_list.append(i)
                     temp_week.remove(i)
         week = temp_sche_list
-  
+        print(check_week_capsule_health(week))
         capsule_holder.append(week)
-    
+    print(capsule_holder)
     return capsule_holder
 
 def week_number_generator(seed:int,total_weeks:int)->list:
@@ -654,7 +656,7 @@ for date , soc_list in schedule_dict.items():
 schedule_quality = []
 for date , soc_list in schedule_dict.items():
     schedule_quality.append(are_in_same_area(soc_list[0],soc_list[1]))
-    dict_data.append({'Date':date.split()[0],'Society 1':soc_list[0],'Society 2':soc_list[1],'Area':soc_list[-1],'Zone':get_zone_from_area_name(soc_list[-1]),'Week Number':date.split()[1],'Standard':(get_standard_from_name(soc_list[0]),get_standard_from_name(soc_list[1]))})
+    dict_data.append({'Date':date.split()[0],'Society 1':soc_list[0],'Society 2':soc_list[1],'Area':soc_list[-1],'Zone':get_zone_from_area_name(soc_list[-1]),'Week Number':date.split()[1],'Standard':(get_standard_from_name(soc_list[0]),get_standard_from_name(soc_list[1])),'Flat Count':(get_flat_count_from_name(soc_list[0]),get_flat_count_from_name(soc_list[1]))})
 
 
 #did not get chance list 
@@ -665,12 +667,12 @@ with open('data3.csv','r') as f:
         for i in data:
             soc_name = i[1]
             if soc_name not in global_actual_done_list and soc_name not in nope_helper :
-                nope.append({'Date':'To be decided','Society 1':soc_name,'Society 2':soc_name,'Area':i[4],'Zone':i[3],'Week Number':'To be decided','Standard':get_standard_from_name(soc_name)})
+                nope.append({'Date':'To be decided','Society 1':soc_name,'Society 2':soc_name,'Area':i[4],'Zone':i[3],'Week Number':'To be decided','Standard':get_standard_from_name(soc_name),'Flat Count':get_flat_count_from_name(soc_name)})
                 nope_helper.append(soc_name)
 dict_data+=nope
-csv_file_name = "Schedule11.csv"
+csv_file_name = "ScheduleOmega.csv"
 csv_file = csv_file_name
-csv_columns = ['Date','Society 1','Society 2','Area','Zone',"Week Number",'Standard']
+csv_columns = ['Date','Society 1','Society 2','Area','Zone',"Week Number",'Standard','Flat Count']
 try:
     with open(csv_file, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
@@ -682,11 +684,13 @@ except IOError:
 
 df_new = pd.read_csv(csv_file_name)
   
-schedule_xlsx = pd.ExcelWriter('Schedule11.xlsx')
+schedule_xlsx = pd.ExcelWriter('ScheduleOmega.xlsx')
 df_new.to_excel(schedule_xlsx, index = False)
 
 print(schedule_quality.count(True))
 print(schedule_quality.count("One of them is none lol"))
 print(schedule_quality.count(False))
 schedule_xlsx.save()
+
+
 
