@@ -6,3 +6,7 @@
 
 3.Implement a: m :w:n ratio 
 
+4.Make it runnable for n vehicles 
+
+5.Take less angels into repetition 
+
